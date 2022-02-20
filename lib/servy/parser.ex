@@ -13,8 +13,8 @@ defmodule Servy.Parser do
 
     params = parse_params(headers["Content-Type"], params_string)
 
-    %Conv{ 
-       method: method, 
+    %Conv{
+       method: method,
        path: path,
        params: params,
        headers: headers
@@ -30,7 +30,7 @@ defmodule Servy.Parser do
   def parse_headers([], headers), do: headers
 
   @doc """
-  Parses the given param string of the form `key1=value1&key2=value2` 
+  Parses the given param string of the form `key1=value1&key2=value2`
   into a map with corresponding keys and values.
 
   ## Examples
@@ -42,6 +42,10 @@ defmodule Servy.Parser do
   """
   def parse_params("application/x-www-form-urlencoded", params_string) do
     params_string |> String.trim |> URI.decode_query
+  end
+
+  def parse_params("application/json", params_string) do
+    Poison.decode!(params_string)
   end
 
   def parse_params(_, _), do: %{}
