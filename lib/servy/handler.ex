@@ -50,8 +50,19 @@ defmodule Servy.Handler do
     Servy.Api.BearController.create(conv)
   end
 
+  def route(%Conv{method: "GET", path: "/pages/faq"} = conv) do
+    %{ conv | status: 200, resp_body: get_faq_html()}
+  end
+
   def route(%Conv{ path: path } = conv) do
     %{ conv | status: 404, resp_body: "No #{path} here!"}
+  end
+
+  defp get_faq_html() do
+    @pages_path
+      |> Path.join("/faq/faq.md")
+      |> File.read!
+      |> Earmark.as_html!
   end
 
   def handle_file({:ok, content}, conv) do

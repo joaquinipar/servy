@@ -21,7 +21,8 @@ defmodule Servy.Mixfile do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-     {:poison, "~> 5.0"}
+     {:poison, "~> 5.0"},
+     {:earmark, "~> 1.4"}
     ]
   end
 end

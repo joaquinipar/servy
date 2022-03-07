@@ -191,6 +191,25 @@ defmodule HandlerTest do
     """
   end
 
+  test "GET /pages/faq" do
+    request = """
+    GET /pages/faq HTTP/1.1\r
+    Host: example.com\r
+    User-Agent: ExampleBrowser/1.0\r
+    Accept: */*\r
+    \r
+    """
+
+    response = handle(request)
+
+    expected_response = """
+    HTTP/1.1200OKContent-Type:text/htmlContent-Length:647<h1>FrequentlyAskedQuestions</h1><ul><li><p><strong>HaveyoureallyseenBigfoot?</strong></p><p>Yes!Inthis<ahref=\"https://www.youtube.com/watch?v=v77ijOO8oAk\">totallybelievablevideo</a>!</p></li><li><p><strong>No,ImeanseenBigfoot<em>ontherefuge</em>?</strong></p><p>Oh!Notyet,butwe’re<em>stilllooking</em>…</p></li><li><p><strong>Canyoujustshowmesomecode?</strong></p><p>Sure!Here’ssomeElixir:</p><pre><codeclass=\"elixir\">[&quot;Bigfoot&quot;,&quot;Yeti&quot;,&quot;Sasquatch&quot;]|&gt;Enum.random()</code></pre></li></ul>
+    """
+
+    assert remove_whitespace(response) == remove_whitespace(expected_response)
+  end
+
+
   defp remove_whitespace(text) do
     String.replace(text, ~r{\s}, "")
   end
