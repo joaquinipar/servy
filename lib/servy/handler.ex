@@ -27,13 +27,13 @@ defmodule Servy.Handler do
 
     caller = self()
 
-    spawn(fn -> send(caller, VideoCam.get_snapshot("cam-1")))
-    spawn(fn -> send(caller, VideoCam.get_snapshot("cam-2")))
-    spawn(fn -> send(caller, VideoCam.get_snapshot("cam-3")))
+    spawn(fn -> send(caller, {:result, VideoCam.get_snapshot("cam-1")}) end)
+    spawn(fn -> send(caller, {:result, VideoCam.get_snapshot("cam-2")}) end)
+    spawn(fn -> send(caller, {:result, VideoCam.get_snapshot("cam-3")}) end)
 
-    snapshot1 = VideoCam.get_snapshot("cam-1")
-    snapshot2 = VideoCam.get_snapshot("cam-2")
-    snapshot3 = VideoCam.get_snapshot("cam-3")
+    snapshot1 = receive do {:result, filename} -> filename end
+    snapshot2 = receive do {:result, filename} -> filename end
+    snapshot3 = receive do {:result, filename} -> filename end
 
     snapshots = [snapshot1, snapshot2, snapshot3]
 
