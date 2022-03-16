@@ -19,7 +19,7 @@ defmodule HandlerTest do
     Content-Type: text/html\r
     Content-Length: 20\r
     \r
-    Bears, Lions, Tigers
+    Bears, Lions, Tigers\r
     """
   end
 
@@ -48,7 +48,7 @@ defmodule HandlerTest do
      {"type":"Black","name":"Rosie","id":7,"hibernating":true},
      {"type":"Panda","name":"Roscoe","id":8,"hibernating":false},
      {"type":"Polar","name":"Iceman","id":9,"hibernating":true},
-     {"type":"Grizzly","name":"Kenai","id":10,"hibernating":false}]
+     {"type":"Grizzly","name":"Kenai","id":10,"hibernating":false}]\r
     """
 
     assert remove_whitespace(response) == remove_whitespace(expected_response)
@@ -70,7 +70,7 @@ defmodule HandlerTest do
     Content-Type: text/html\r
     Content-Length: 17\r
     \r
-    No /bigfoot here!
+    No /bigfoot here!\r
     """
   end
 
@@ -93,7 +93,7 @@ defmodule HandlerTest do
     <h1>Show Bear</h1>
     <p>
     Is Teddy hibernating? <strong>true</strong>
-    </p>
+    </p>\r
     """
 
     assert remove_whitespace(response) == remove_whitespace(expected_response)
@@ -115,7 +115,7 @@ defmodule HandlerTest do
     Content-Type: text/html\r
     Content-Length: 20\r
     \r
-    Bears, Lions, Tigers
+    Bears, Lions, Tigers\r
     """
   end
 
@@ -154,7 +154,7 @@ defmodule HandlerTest do
     Content-Type: application/x-www-form-urlencoded\r
     Content-Length: 21\r
     \r
-    name=Baloo&type=Brown
+    name=Baloo&type=Brown\r
     """
 
     response = handle(request)
@@ -164,7 +164,7 @@ defmodule HandlerTest do
     Content-Type: text/html\r
     Content-Length: 33\r
     \r
-    Created a Brown bear named Baloo!
+    Created a Brown bear named Baloo!\r
     """
   end
 
@@ -177,7 +177,7 @@ defmodule HandlerTest do
     Content-Type: application/json\r
     Content-Length: 21\r
     \r
-    {"name": "Breezly", "type": "Polar"}
+    {"name": "Breezly", "type": "Polar"}\r
     """
 
     response = handle(request)
@@ -187,7 +187,7 @@ defmodule HandlerTest do
     Content-Type: text/html\r
     Content-Length: 35\r
     \r
-    Created a Polar bear named Breezly!
+    Created a Polar bear named Breezly!\r
     """
   end
 

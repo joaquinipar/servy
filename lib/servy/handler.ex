@@ -96,9 +96,9 @@ defmodule Servy.Handler do
 
   def format_response(%Conv{} = conv) do
     """
-    HTTP/1.1 #{Conv.full_status(conv)}\r
+    HTTP/1.1 #{Conv.full_status(conv)}
     #{format_response_headers(conv.resp_headers)}
-    \r
+
     #{conv.resp_body}
     """
   end
@@ -112,10 +112,10 @@ defmodule Servy.Handler do
   def format_response_headers(headers) do
 
     headers
-      |> Enum.map(fn({header, value}) -> "#{header}: #{value}\r" end)
+      |> Enum.map(fn({header, value}) -> "#{header}: #{value}" end)
       |> Enum.sort
       |> Enum.reverse
-      |> Enum.join("\n")
+      |> Enum.join("\r\n")
   end
 
 end
