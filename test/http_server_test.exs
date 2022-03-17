@@ -41,6 +41,41 @@ defmodule HttpServerTest do
     assert remove_whitespace(final_response) == remove_whitespace(expected_response)
   end
 
+  test "client sends 5 requests concurrently" do
+
+    expected_response_wildthings = """
+    HTTP/1.1 200 OK\r
+    Content-Type: text/html\r
+    Content-Length: 20\r
+    \r
+    Bears, Lions, Tigers\r
+    """
+
+    caller = self()
+
+    spawn(fn -> HttpServer.start(2345) end)
+
+    get_resource = fn(route) ->
+      "#{@hostname}:#{Integer.to_string(@port)}/#{route}"
+      |> HTTPoison.get!()
+      |> convert_poison_response_to_conv
+    end
+
+    connection_amount = 5
+
+    for _ <- 1..connection_amount  do
+      spawn(fn -> send(caller, {:result,get_resource.("wildthings")}) end)
+    end
+
+    for _ <- 1..connection_amount  do
+      receive do
+        {:result, response_wildthings} ->
+          assert remove_whitespace(response_wildthings) == remove_whitespace(expected_response_wildthings)
+      end
+    end
+
+  end
+
   defp remove_whitespace(text) do
     String.replace(text, ~r{\s}, "")
   end
