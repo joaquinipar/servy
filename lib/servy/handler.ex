@@ -5,11 +5,13 @@ defmodule Servy.Handler do
   alias Servy.Conv
   alias Servy.BearController
   alias Servy.Api.VideoCam
+  alias Servy.Tracker
 
   @pages_path Path.expand("../../pages", __DIR__)
 
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servy.Parser, only: [parse: 1]
+  import Servy.Tracker
 
   @doc "Transforms the request into a response."
   def handle(request) do
@@ -23,21 +25,18 @@ defmodule Servy.Handler do
     |> format_response
   end
 
-  def route(%Conv{ method: "GET", path: "/snapshots" } = conv) do
+  def route(%Conv{ method: "GET", path: "/sensors" } = conv) do
 
-    caller = self()
+    task = Task.async(fn -> Tracker.get_location("bigfoot") end)
 
-    spawn(fn -> send(caller, {:result, VideoCam.get_snapshot("cam-1")}) end)
-    spawn(fn -> send(caller, {:result, VideoCam.get_snapshot("cam-2")}) end)
-    spawn(fn -> send(caller, {:result, VideoCam.get_snapshot("cam-3")}) end)
+    snapshots =
+      ["cam-1", "cam-2", "cam-3"]
+      |> Enum.map(&Task.async(fn -> VideoCam.get_snapshot(&1) end))
+      |> Enum.map(&Task.await/1)
 
-    snapshot1 = receive do {:result, filename} -> filename end
-    snapshot2 = receive do {:result, filename} -> filename end
-    snapshot3 = receive do {:result, filename} -> filename end
+    where_is_bigfoot = Task.await(task)
 
-    snapshots = [snapshot1, snapshot2, snapshot3]
-
-    %{ conv | status: 200, resp_body: inspect snapshots}
+    %{ conv | status: 200, resp_body: inspect {snapshots,where_is_bigfoot}}
   end
   def route(%Conv{ method: "GET", path: "/wildthings" } = conv) do
     %{ conv | status: 200, resp_body: "Bears, Lions, Tigers" }
