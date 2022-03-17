@@ -34,7 +34,8 @@ defmodule HttpServerTest do
     spawn(fn -> HttpServer.start(2345) end)
 
     final_response =
-      "#{@hostname}:#{Integer.to_string(@port)}/wildthings"
+      "wildthings"
+      |> get_uri_from_route
       |> HTTPoison.get!()
       |> convert_poison_response_to_conv
 
@@ -61,6 +62,19 @@ defmodule HttpServerTest do
     |> Enum.map(&assert_responses(expected_response_wildthings, &1))
   end
 
+  test "client requests several things and server responds 200 OK" do
+    caller = self()
+    spawn(fn -> HttpServer.start(2345) end)
+
+    routes = ["about","wildthings","sensors"]
+
+    routes
+    |> Enum.map(&get_uri_from_route(&1))
+    |> Enum.map(fn(route) -> Task.async(fn -> HTTPoison.get!(route) end) end)
+    |> Enum.map(&Task.await(&1,:timer.seconds(6)))
+    |> Enum.map(fn(response)-> assert response.status_code === 200 end)
+  end
+
   defp remove_whitespace(text) do
     String.replace(text, ~r{\s}, "")
   end
@@ -84,8 +98,13 @@ defmodule HttpServerTest do
     assert remove_whitespace(response) === remove_whitespace(expected)
   end
 
-  def get_resource(route) do
+  defp get_uri_from_route(route) do
     "#{@hostname}:#{Integer.to_string(@port)}/#{route}"
+  end
+
+  def get_resource(route) do
+    route
+    |> get_uri_from_route
     |> HTTPoison.get!()
     |> convert_poison_response_to_conv
   end
