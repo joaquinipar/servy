@@ -52,28 +52,13 @@ defmodule HttpServerTest do
     """
 
     caller = self()
-
     spawn(fn -> HttpServer.start(2345) end)
-
-    get_resource = fn(route) ->
-      "#{@hostname}:#{Integer.to_string(@port)}/#{route}"
-      |> HTTPoison.get!()
-      |> convert_poison_response_to_conv
-    end
-
     connection_amount = 5
 
-    for _ <- 1..connection_amount  do
-      spawn(fn -> send(caller, {:result,get_resource.("wildthings")}) end)
-    end
-
-    for _ <- 1..connection_amount  do
-      receive do
-        {:result, response_wildthings} ->
-          assert remove_whitespace(response_wildthings) == remove_whitespace(expected_response_wildthings)
-      end
-    end
-
+    1..connection_amount
+    |> Enum.map(fn(_) -> Task.async(fn -> get_resource("wildthings") end) end)
+    |> Enum.map(&Task.await(&1,:timer.seconds(6)))
+    |> Enum.map(&assert_responses(expected_response_wildthings, &1))
   end
 
   defp remove_whitespace(text) do
@@ -93,5 +78,15 @@ defmodule HttpServerTest do
     conv = %Conv{method: method, status: code, resp_headers: headers, resp_body: body}
 
     Handler.format_response(conv)
+  end
+
+  def assert_responses(expected, response) do
+    assert remove_whitespace(response) === remove_whitespace(expected)
+  end
+
+  def get_resource(route) do
+    "#{@hostname}:#{Integer.to_string(@port)}/#{route}"
+    |> HTTPoison.get!()
+    |> convert_poison_response_to_conv
   end
 end
