@@ -6,12 +6,14 @@ defmodule Servy.Handler do
   alias Servy.BearController
   alias Servy.Api.VideoCam
   alias Servy.Tracker
+  alias Servy.View
 
   @pages_path Path.expand("../../pages", __DIR__)
 
   import Servy.Plugins, only: [rewrite_path: 1, log: 1, track: 1]
   import Servy.Parser, only: [parse: 1]
   import Servy.Tracker
+  import Servy.View
 
   @doc "Transforms the request into a response."
   def handle(request) do
@@ -35,9 +37,9 @@ defmodule Servy.Handler do
       |> Enum.map(&Task.await(&1,:timer.seconds(5)))
 
     where_is_bigfoot = Task.await(task,:timer.seconds(5))
-
-    %{ conv | status: 200, resp_body: inspect {snapshots,where_is_bigfoot}}
+    View.render(%{ conv | status: 200}, "sensors.eex", sensors: [ Poison.encode!(where_is_bigfoot) | snapshots])
   end
+
   def route(%Conv{ method: "GET", path: "/wildthings" } = conv) do
     %{ conv | status: 200, resp_body: "Bears, Lions, Tigers" }
   end

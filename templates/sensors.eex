@@ -1,0 +1,9 @@
+<h1>There are my sensors responses!!</h1>
+
+<ul>
+    <%= for sensor <- sensors do %>
+        <li>
+            <%= sensor %>
+        </li>
+    <% end %>
+</ul>
