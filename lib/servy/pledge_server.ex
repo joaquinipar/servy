@@ -19,7 +19,7 @@ defmodule Servy.PledgeServer do
 
   def recent_pledges() do
     # Returns the most recent pledges (cache)
-    send @pledge_server_pid, :recent_pledges
+    send @pledge_server_pid, {self(), :recent_pledges}
 
 
     receive do {:response, pledges} -> pledges end
