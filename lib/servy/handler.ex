@@ -80,6 +80,17 @@ defmodule Servy.Handler do
     %{ conv | status: 200, resp_body: get_faq_html()}
   end
 
+  def route(%Conv{method: "GET", path: "/404s"} = conv) do
+
+    counts_html = Servy.Counter.get_counts()
+    |> Enum.map(fn {route, count} -> "<li>#{route}: #{count}</li>" end )
+    |> List.insert_at(0, "<ul>")
+    |> Kernel.++(["</ul>"])
+    |> Enum.join("")
+
+    %{ conv | status: 200, resp_body: counts_html}
+  end
+
   def route(%Conv{ path: path } = conv) do
     %{ conv | status: 404, resp_body: "No #{path} here!"}
   end
