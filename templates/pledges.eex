@@ -1,0 +1,19 @@
+<h1>Pledges</h1>
+
+<a href="/pledges/new">Create a new pledge!!</a>
+
+<%= if Enum.empty?(pledges) do %>
+    <p>Nobody has pledged yet!</p>
+<% else %>
+    <ul>
+        <%= for {pledge, amount} <- pledges do %>
+            <li>
+                <%=pledge%>: <%=amount%>
+            </li>
+        <% end  %>
+        
+    </ul>
+<% end %>
+
+
+

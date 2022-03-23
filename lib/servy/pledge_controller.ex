@@ -1,12 +1,13 @@
 defmodule Servy.PledgeController do
 
   alias Servy.PledgeServer
+  alias Servy.View
 
   def create(conv, %{"name" => name, "amount" => amount}) do
     # Sends the pledge to the external service and caches it
     pledge_response = Servy.PledgeServer.create_pledge(name, String.to_integer(amount))
     case pledge_response do
-      {:response, _} -> %{ conv | status: 201, resp_body: "#{name} pledged #{amount}!" }
+      {:response, _} -> %{ conv | status: 201, resp_body: ~s(#{name} pledged #{amount}! <a href="/pledges">Return</a>)  }
       {:error, reason} -> %{ conv | status: 500, resp_body: "An error ocurred. #{reason.reason}" }
     end
   end
@@ -14,7 +15,10 @@ defmodule Servy.PledgeController do
   def index(conv) do
     # Gets the recent pledges from the cache
     pledges = PledgeServer.recent_pledges()
+    View.render(%{ conv | status: 200}, "pledges.eex", pledges: pledges)
+  end
 
-    %{ conv | status: 200, resp_body: (inspect pledges) }
+  def get_create(conv) do
+    View.render(%{ conv | status: 200}, "create_pledge.eex")
   end
 end
