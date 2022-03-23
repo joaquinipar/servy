@@ -1,6 +1,7 @@
 defmodule Servy.PledgeServer do
 
   @pledge_server_pid :pledge_server_pid # a constant
+  @external_service_url "https://httparrot.herokuapp.com"
 
   def start_server do
     IO.puts "Starting the Pledge Server."
@@ -14,7 +15,10 @@ defmodule Servy.PledgeServer do
   def create_pledge( name, amount) do
     send @pledge_server_pid, {self(), :create_pledge, name, amount}
 
-    receive do {:response, status} -> status end
+    receive do
+      {:response, status} -> {:response, status}
+      {:error, reason} -> {:error, reason}
+    end
   end
 
   def recent_pledges() do
@@ -25,10 +29,16 @@ defmodule Servy.PledgeServer do
     receive do {:response, pledges} -> pledges end
   end
 
-  defp send_pledge_to_service(_name, _amount) do
+  defp send_pledge_to_service(name, amount) do
     # Sends pledge to external service...
+    IO.puts "Sending to external service.."
 
-    {:ok, "pledge-#{:rand.uniform(1000)}"}
+    post_result = HTTPoison.post("#{@external_service_url}/post", Poison.encode!(%{name: name,amount: amount}))
+
+    case post_result do
+      {:ok, _} -> {:ok, "pledge-#{:rand.uniform(1000)}"}
+      {:error, reason} -> {:error, reason}
+    end
   end
 
   def total_pledged do
@@ -46,14 +56,20 @@ defmodule Servy.PledgeServer do
 
     receive do
       {sender, :create_pledge, name, amount} ->
-        {:ok, id} = send_pledge_to_service(name, amount)
-        # Save pledge to cache
-        recent_pledges = Enum.take(state, 2)
-        new_state = [ {name, amount} | recent_pledges]
-        IO.puts "New state is #{inspect new_state}"
-        IO.puts "#{name} pledged #{amount}!"
-        send sender, {:response, id}
-        listen_loop(new_state)
+        case send_pledge_to_service(name, amount) do
+          {:ok, id} -> # Save pledge to cache
+            recent_pledges = Enum.take(state, 2)
+            new_state = [ {name, amount} | recent_pledges]
+            IO.puts "New state is #{inspect new_state}"
+            IO.puts "#{name} pledged #{amount}!"
+            send sender, {:response, id}
+            listen_loop(new_state)
+          {:error, reason} ->
+            IO.puts "Processing error.."
+            IO.puts "An error ocurred. '#{reason.reason}'"
+            send sender, {:error, reason}
+            listen_loop(state)
+        end
 
         {sender ,:recent_pledges} ->
           send sender, {:response, state}
