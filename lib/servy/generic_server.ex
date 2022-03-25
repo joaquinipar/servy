@@ -15,6 +15,7 @@ defmodule Servy.GenericServer do
     receive do
       {:response, response} -> response
       {:error, reason} -> {:error, reason}
+      _ -> :error
     end
   end
 
