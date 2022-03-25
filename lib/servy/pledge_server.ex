@@ -3,30 +3,21 @@ defmodule Servy.PledgeServer do
   @pledge_server_pid :pledge_server_pid # a constant
   @external_service_url "https://httparrot.herokuapp.com"
 
-  def start_server do
-    IO.puts "Starting the Pledge Server."
-    pid = spawn(__MODULE__, :listen_loop, [[]])
-    Process.register(pid, :pledge_server_pid) # to avoid sending the server's pid in every function argument
-    pid
+  alias Servy.GenericServer
+
+  def start do
+    GenericServer.start_server(__MODULE__,[], @pledge_server_pid)
   end
 
   # Client Process
 
   def create_pledge( name, amount) do
-    send @pledge_server_pid, {self(), :create_pledge, name, amount}
-
-    receive do
-      {:response, status} -> {:response, status}
-      {:error, reason} -> {:error, reason}
-    end
+    GenericServer.call @pledge_server_pid, {:create_pledge, name, amount}
   end
 
   def recent_pledges() do
     # Returns the most recent pledges (cache)
-    send @pledge_server_pid, {self(), :recent_pledges}
-
-
-    receive do {:response, pledges} -> pledges end
+    GenericServer.call @pledge_server_pid, :recent_pledges
   end
 
   defp send_pledge_to_service(name, amount) do
@@ -42,55 +33,47 @@ defmodule Servy.PledgeServer do
   end
 
   def total_pledged do
-    send @pledge_server_pid, {self(), :total_pledged}
+    GenericServer.call @pledge_server_pid, :total_pledged
+  end
 
-    receive do
-      {:response, total_pledged} -> total_pledged
+  def clear do
+    GenericServer.cast @pledge_server_pid, :clear
+  end
+
+  # Server Callbacks
+
+
+
+  def handle_cast(:clear, _state) do
+    []
+  end
+
+  def handle_call({:create_pledge, name, amount}, state) do
+    case send_pledge_to_service(name, amount) do
+      {:ok, id} -> # Save pledge to cache
+        recent_pledges = Enum.take(state, 2)
+        new_state = [ {name, amount} | recent_pledges]
+        IO.puts "New state is #{inspect new_state}"
+        IO.puts "#{name} pledged #{amount}!"
+        {new_state, {:response, id}}
+      {:error, reason} ->
+        IO.puts "An error ocurred. '#{reason.reason}'"
+        {state, {:error, reason}}
     end
   end
 
-  # Server process
+  def handle_call(:recent_pledges, state) do
+    IO.puts "Sent recent pledges.."
+    {state, {:response, state}}
+  end
 
-  def listen_loop(state \\ []) do
-    IO.puts "\nWaiting for a message.."
-
-    receive do
-      {sender, :create_pledge, name, amount} ->
-        case send_pledge_to_service(name, amount) do
-          {:ok, id} -> # Save pledge to cache
-            recent_pledges = Enum.take(state, 2)
-            new_state = [ {name, amount} | recent_pledges]
-            IO.puts "New state is #{inspect new_state}"
-            IO.puts "#{name} pledged #{amount}!"
-            send sender, {:response, id}
-            listen_loop(new_state)
-          {:error, reason} ->
-            IO.puts "Processing error.."
-            IO.puts "An error ocurred. '#{reason.reason}'"
-            send sender, {:error, reason}
-            listen_loop(state)
-        end
-
-        {sender ,:recent_pledges} ->
-          send sender, {:response, state}
-          IO.puts "Sent recent pledges to #{inspect sender}"
-          listen_loop(state)
-
-        {sender, :total_pledged} ->
-          total_pledged =
-            state
-            |> Enum.map(fn ({_, amount}) -> amount end)
-            |> Enum.sum
-          IO.puts "Sent total pledges (#{total_pledged}) to #{inspect sender}"
-          send sender, {:response, total_pledged}
-          listen_loop(state)
-
-          unexpected ->
-            IO.puts "Unexpected message #{inspect unexpected}"
-            listen_loop(state)
-    end
-
-
+  def handle_call(:total_pledged, state) do
+    total_pledged =
+      state
+      |> Enum.map(fn ({_, amount}) -> amount end)
+      |> Enum.sum
+    IO.puts "Sent total pledges (#{total_pledged}).."
+    {state, {:response, total_pledged}}
   end
 
 end
