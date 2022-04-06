@@ -39,7 +39,7 @@ defmodule Servy.Handler do
     Servy.PledgeController.get_create(conv)
   end
 
-  def route(%Conv{ method: "GET", path: "/sensors" } = conv) do
+  def route(%Conv{ method: "GET", path: "/pages/sensors" } = conv) do
 
     task = Task.async(fn -> Tracker.get_location("bigfoot") end)
 
@@ -50,6 +50,14 @@ defmodule Servy.Handler do
 
     where_is_bigfoot = Task.await(task,:timer.seconds(5))
     View.render(%{ conv | status: 200}, "sensors.eex", sensors: [ Poison.encode!(where_is_bigfoot) | snapshots])
+  end
+
+  def route(%Conv{ method: "GET", path: "/sensors" } = conv) do
+
+
+  sensor_data = Servy.SensorServer.get_sensor_data()
+
+    %{ conv | status: 200, resp_body: inspect sensor_data }
   end
 
   def route(%Conv{ method: "GET", path: "/wildthings" } = conv) do
