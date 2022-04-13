@@ -9,8 +9,16 @@ defmodule Servy.PledgeServer do
     defstruct cache_size: 3, pledges: []
   end
 
-  def start do
-    GenServer.start(__MODULE__,%State{}, name: @pledge_server_pid)
+  #def child_spec(arg) do
+  #  # Customize start
+  #  %{id: Servy.PledgeServer, restart: :temporary, shutdown: 5000,
+  #  start: {Servy.PledgeServer, :start_link, [[]], type: :worker}}
+  #end
+
+  def start_link(_arg) do
+    IO.puts "Starting the Pledge server..."
+    GenServer.start_link(__MODULE__,%State{}, name: @pledge_server_pid)
+    # spawn the GenServer process and link it to the process that calls this function
   end
 
   # Client Process

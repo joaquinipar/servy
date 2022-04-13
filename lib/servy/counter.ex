@@ -6,8 +6,9 @@ defmodule Servy.Counter do
 
   # Client
 
-  def start do
-  GenServer.start(__MODULE__, %{}, name: @server_pid)
+  def start_link(_arg) do
+    IO.puts "Starting the Counter (404) process.."
+    GenServer.start_link(__MODULE__, %{}, name: @server_pid)
   end
 
   def bump_counter(route) do
