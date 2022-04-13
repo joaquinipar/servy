@@ -4,7 +4,8 @@ defmodule FourOhFourCounterTest do
   alias Servy.Counter
 
   test "reports counts of missing path requests" do
-    Counter.start()
+    #Counter.start_link()
+
 
     Counter.bump_counter("/bigfoot")
     Counter.bump_counter("/nessie")

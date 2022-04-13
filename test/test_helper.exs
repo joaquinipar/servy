@@ -1,2 +1,2 @@
 ExUnit.start()
-Servy.PledgeServer.start()
+Servy.Supervisor.start_link()
